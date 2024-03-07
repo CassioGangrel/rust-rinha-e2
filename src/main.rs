@@ -1,5 +1,7 @@
-use sqlx::{postgres::PgPoolOptions, FromRow, PgPool };
+use axum::{ Router, routing::get, extract::State, };
+use sqlx::{postgres::PgPoolOptions, PgPool };
 use clap::Parser;
+use std::{os::linux::raw::stat, sync::Arc};
 
 #[derive(Parser, Debug)]
 struct Config {
@@ -8,7 +10,7 @@ struct Config {
 }
 
 struct AppState {
-    pool: PgPool
+    pub pool: PgPool
 }
 
 #[tokio::main]
@@ -27,5 +29,14 @@ async fn main() {
         .run(&pool)
         .await
         .expect("Não foi possivel executar as migrations");
+
+    let state = AppState { pool };
+
+    let router = Router::new()
+        .route("/", get(|| async {"Hello, world!"}))
+        .with_state(Arc::new(state));
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, router).await.unwrap();
 
 }
