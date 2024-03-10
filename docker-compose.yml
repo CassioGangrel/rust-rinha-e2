@@ -1,12 +1,15 @@
 services:
   api01: &api
-    #image: cassiogangrel/deno_rinha_e2:1.0.0
+    #image: cassiogangrel/rust_rinha_2e:1.0.0
     build: .
     depends_on:
       - postgres
     restart: on-failure
     environment: 
       - DATABASE_URL=postgres://rinha:rinha@postgres:5432/rinha
+      - DATABASE_CONN_POOL_MIN=40
+      - DATABASE_CONN_POOL_MAX=40
+      - PORT=3000
     deploy:
       resources:
         limits:

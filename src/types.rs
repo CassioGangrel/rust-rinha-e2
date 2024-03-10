@@ -7,6 +7,12 @@ use time::OffsetDateTime;
 pub struct Config {
     #[clap(long, env)]
     pub database_url: String,
+    #[clap(long, env)]
+    pub port: i32,
+    #[clap(long, env)]
+    pub database_conn_pool_min: u32,
+    #[clap(long, env)]
+    pub database_conn_pool_max: u32,
 }
 
 #[derive(Clone)]

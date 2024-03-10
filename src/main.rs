@@ -24,8 +24,8 @@ async fn main() {
     let config: types::Config = types::Config::parse();
 
     let pool = PgPoolOptions::new()
-        .max_connections(10)
-        .min_connections(10)
+        .max_connections(config.database_conn_pool_max)
+        .min_connections(config.database_conn_pool_min)
         .connect(&config.database_url)
         .await
         .expect("Não foi possivel conectar ao banco de dados!");
@@ -38,18 +38,19 @@ async fn main() {
     let state = AppState { pool };
 
     let router = Router::new()
-        .route("/", get(root_handler))
         .route("/clientes/:id/transacoes", post(new_transaction))
         .route("/clientes/:id/extrato", get(get_client_statement))
         .with_state(state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.port))
+        .await
+        .unwrap();
 
-    axum::serve(listener, router).await.unwrap();
-}
+    println!("Inciando servidor na porta: {}", config.port);
 
-async fn root_handler() -> impl IntoResponse {
-    "To pronto para a briga, pode mandar vim!".to_string()
+    axum::serve(listener, router)
+        .await
+        .expect("Erro ao subir o servidor!");
 }
 
 const TRANSACTIONS_KIND: [&str; 2] = ["c", "d"];
@@ -84,7 +85,7 @@ async fn new_transaction(
     .bind(payload.value)
     .bind(payload.kind)
     .bind(payload.description)
-    .execute(& mut *tx)
+    .execute(&mut *tx)
     .await;
 
     match persit_transaction {
@@ -104,7 +105,7 @@ async fn new_transaction(
         Err(_) => {
             tx.rollback().await.unwrap();
             Err(StatusCode::UNPROCESSABLE_ENTITY)
-        },
+        }
     }
 }
 
