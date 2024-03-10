@@ -1,0 +1,57 @@
+services:
+  api01: &api
+    #image: cassiogangrel/deno_rinha_e2:1.0.0
+    build: .
+    depends_on:
+      - postgres
+    restart: on-failure
+    environment: 
+      - DATABASE_URL=postgres://rinha:rinha@postgres:5432/rinha
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: "50MB"
+  api02:
+    <<: *api
+    depends_on:
+      - api01
+      - postgres
+
+  postgres:
+    image: postgres
+    environment:
+      - POSTGRES_DB=rinha
+      - POSTGRES_USER=rinha
+      - POSTGRES_PASSWORD=rinha
+    deploy:
+      resources:
+        limits:
+          cpus: "0.80"
+          memory: "400MB"
+    healthcheck:
+      test: 'pg_isready -U rinha --dbname=rinha'
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    restart: on-failure
+    depends_on:
+      - api01
+      - api02
+    ports:
+      - "9999:9999"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.20"
+          memory: "50MB"
+
+networks:
+  default:
+    driver: bridge
+    name: rinha-nginx-2024q1

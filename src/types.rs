@@ -9,6 +9,7 @@ pub struct Config {
     pub database_url: String,
 }
 
+#[derive(Clone)]
 pub struct AppState {
     pub pool: PgPool,
 }
@@ -23,7 +24,7 @@ pub struct NewTransactionData {
     pub description: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, FromRow)]
 pub struct NewTransactionResultData {
     #[serde(rename = "limite")]
     pub limit: i32,
@@ -46,15 +47,17 @@ pub struct StatementTransaction {
     #[serde(rename = "valor")]
     pub value: i32,
     #[serde(rename = "tipo")]
-    pub kind: i32,
+    pub kind: String,
     #[serde(rename = "descricao")]
-    pub description: i64,
+    pub description: String,
     #[serde(rename = "realizada_em", with = "time::serde::rfc3339")]
     pub created_at: OffsetDateTime,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CustumerStatement {
+  #[serde(rename = "saldo")]
   pub balance: StatementBalance,
+  #[serde(rename = "ultimas_transacoes")]
   pub last_transactions: Vec<StatementTransaction>,
 }

@@ -4,5 +4,5 @@ create table if not exists transactions (
 	value integer not null,
 	type char(1) not null,
 	description varchar(10) not null,
-	created_at timestamp not null default now()
+	created_at timestamptz not null default now()
 );
